@@ -18,7 +18,7 @@ import { Layout } from "@/components/layouts";
 import { pokemonsApi } from "@/api";
 
 //Interfaces
-import { Pokemon, PokemonListResponse, SmallPokemon } from "@/interfaces";
+import { Pokemon, PokemonListResponse } from "@/interfaces";
 
 //Utils
 import { localFavorites } from "@/utils";
@@ -125,28 +125,41 @@ const PokemonByNamePage: NextPage<Props> = ({ pokemon }) => {
 };
 
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
-  const { data: { results } } = await pokemonsApi.get<PokemonListResponse>('/pokemon?limit=151');
+  const {
+    data: { results },
+  } = await pokemonsApi.get<PokemonListResponse>("/pokemon?limit=151");
 
   const paths = results.map((pokemon) => {
-    return { params: { name: pokemon.name } }
-  })
+    return { params: { name: pokemon.name } };
+  });
 
   return {
     paths,
-    fallback: false,
+    fallback: "blocking",
   };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { name } = params as { name: string };
 
-  const { data: pokemon } = await pokemonsApi.get<Pokemon>(`/pokemon/${name}`);
+  try {
+    const { data: pokemon } = await pokemonsApi.get<Pokemon>(
+      `/pokemon/${name}`
+    );
 
-  return {
-    props: {
-      pokemon,
-    },
-  };
+    return {
+      props: {
+        pokemon,
+      },
+    };
+  } catch (e) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
 };
 
 export default PokemonByNamePage;
